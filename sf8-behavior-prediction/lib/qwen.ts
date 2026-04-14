@@ -137,7 +137,6 @@ function parseBehaviorResponse(
       const product = availableProducts.find((p) => p.id === parsed.productId) || availableProducts[0];
 
       return {
-        customerId: "",
         recommendedProduct: product,
         confidence: parsed.confidence || 0.7,
         reason: parsed.reason || "Based on behavior analysis",
@@ -161,7 +160,6 @@ function mockBehaviorPrediction(request: QwenBehaviorRequest): BehaviorPredictio
 
   if (!alternativeData) {
     return {
-      customerId: customer.id,
       recommendedProduct: availableProducts[0],
       confidence: 0.5,
       reason: "Insufficient data for detailed analysis",
@@ -241,7 +239,6 @@ function mockBehaviorPrediction(request: QwenBehaviorRequest): BehaviorPredictio
   if (customer.income > selectedProduct.minIncome * 1.5) confidence += 0.1;
 
   return {
-    customerId: customer.id,
     recommendedProduct: selectedProduct,
     confidence: Math.min(confidence, 0.95),
     reason,
