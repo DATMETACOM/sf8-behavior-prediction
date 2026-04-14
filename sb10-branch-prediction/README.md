@@ -1,36 +1,46 @@
 # SB10 - Branch Traffic Prediction & Smart Queue Management
 
-> **PoC for Shinhan Bank InnoBoost 2026**
+> **Qwen AI Build Day 2026 - Shinhan Bank InnoBoost PoC**
 
 ---
 
-## 🎯 Problem
+## 📋 Overview
 
-Khách hàng đến chi nhánh không biết trước thời gian chờ, dẫn đến:
+**Use Case:** SB10 - AI-Powered Branch Traffic Prediction & Smart Queue Management
+
+**Problem:** Khách hàng đến chi nhánh không biết trước thời gian chờ, dẫn đến:
 - Đợi lâu (trung bình 20-30 phút)
 - Khung giờ đông đúc (11am-1pm)
 - Không tối ưu nhân sự
 
+**Solution:** Hệ thống dự đoán lưu lượng chi nhánh bằng Qwen AI
+
 ---
 
-## 💡 Solution
+## 🎯 Features
 
-Hệ thống dự đoán lưu lượng chi nhánh bằng Qwen AI:
-- **Dự báo theo giờ** - Biết trước khi nào đông
-- **"Best time to visit"** - Khuyến nghị giờ vàng
-- **Real-time queue** - Cập nhật khi có check-in mới
-- **Staff optimization** - Gợi ý nhân sự cho manager
+| Feature | Description |
+|---------|-------------|
+| **Dashboard** | Hiển thị 5 chi nhánh với trạng thái real-time |
+| **Hourly Forecast** | Dự báo khách hàng và thời gian chờ theo giờ |
+| **Best Time to Visit** | Khuyến nghị giờ vàng đến chi nhánh |
+| **Congestion Levels** | Màu sắc: 🟢 Thấp / 🟡 Trung bình / 🔴 Cao |
+| **Branch Detail** | Chi tiết từng chi nhánh với đồ thị forecast |
 
 ---
 
 ## 🚀 Quick Start
 
 ```bash
+# Install dependencies
 npm install
-npm run dev
-```
 
-Open http://localhost:3000
+# Run development
+npm run dev
+
+# Open browser
+open http://localhost:3000
+```
 
 ---
 
@@ -38,36 +48,107 @@ Open http://localhost:3000
 
 ```
 sb10-branch-prediction/
-├── app/
-│   ├── page.tsx          # Dashboard - Branch list
-│   ├── branches/
-│   │   └── [id]/
-│   │       └── page.tsx  # Branch detail + Forecast
-│   └── api/
-│       └── predict/
-│           └── [branchId]/
-│               └── route.ts  # Qwen API endpoint
-├── components/
-│   ├── branch-card.tsx
-│   ├── forecast-chart.tsx
-│   └── queue-display.tsx
-├── lib/
-│   ├── qwen.ts           # Qwen API client
-│   └── data.ts           # Mock data generator
-└── types/
-    └── index.ts          # TypeScript interfaces
+├── src/
+│   ├── app/
+│   │   ├── globals.css          # Global styles
+│   │   ├── layout.tsx            # Root layout
+│   │   ├── page.tsx              # Dashboard (branch list)
+│   │   └── branches/[id]/
+│   │       └── page.tsx          # Branch detail + forecast
+│   └── lib/
+│       ├── data.ts               # Mock data generator
+│       └── qwen.ts               # Qwen API client (TBD)
+├── types/
+│   └── index.ts                  # TypeScript interfaces
+├── package.json
+├── tsconfig.json
+├── tailwind.config.ts
+└── next.config.mjs
 ```
 
 ---
 
-## 🤖 Qwen Integration
+## 🗄️ Data Structure
 
+### Branch
 ```typescript
-// Qwen prediction call
-const prediction = await qwen.predict({
-  branch: "Quận Tân Bình",
+interface Branch {
+  id: string;
+  name: string;
+  address: string;
+  district: string;
+  openTime: string;
+  closeTime: string;
+  staffCount: number;
+  services: string[];
+  status: "open" | "closed";
+  currentWaitTime?: number;
+  congestionLevel?: "low" | "medium" | "high";
+}
+```
+
+### Hourly Forecast
+```typescript
+interface HourlyForecast {
+  hour: number;                    // 8-17
+  predictedCustomers: number;
+  predictedWaitTime: number;       // minutes
+  congestionLevel: "low" | "medium" | "high";
+}
+```
+
+### Traffic Record
+```typescript
+interface TrafficRecord {
+  id: string;
+  branchId: string;
+  date: string;                    // YYYY-MM-DD
+  hour: number;                    // 0-23
+  dayOfWeek: number;               // 0-6
+  customerCount: number;
+  avgWaitTime: number;             // minutes
+  serviceTypes: string[];
+  staffOnDuty: number;
+}
+```
+
+---
+
+## 🤖 Qwen API Integration (Pending)
+
+### Environment Setup
+```env
+# .env.local
+QWEN_API_KEY=your-api-key-here
+```
+
+### Prompt Template
+```
+You are a bank branch traffic analyst. Analyze this data:
+
+Branch: {branch_name}
+Location: {district}
+History: {historical_data}
+Target date: {target_date}
+
+Predict for {target_date} (hours 8:00-16:00):
+- Hourly customer count
+- Average wait time per hour
+- Congestion level (low/medium/high)
+
+Return JSON format only.
+```
+
+### API Call
+```typescript
+import { predictTraffic } from '@/lib/qwen';
+
+const prediction = await predictTraffic({
+  branchId: "bn-001",
+  branchName: "Chi nhánh Quận Tân Bình",
+  district: "TanBinh",
   history: trafficData,
-  targetDate: "2026-04-12"
+  targetDate: "2026-04-14"
 });
 
 // Response
@@ -75,29 +156,118 @@ const prediction = await qwen.predict({
   hourly: [
     { hour: 9, customers: 5, waitTime: 8, level: "low" },
     { hour: 11, customers: 25, waitTime: 35, level: "high" },
-    { hour: 14, customers: 12, waitTime: 15, level: "medium" }
+    ...
   ],
-  bestTime: "9:00 AM or 3:00 PM"
+  bestTimeToVisit: "9:00 AM or 3:00 PM"
 }
 ```
 
 ---
 
-## 📊 Demo Data
+## 📊 Mock Data
 
-5 branches in HCMC, 30 days history (~3,600 records)
+**5 Branches in HCMC:**
+1. Chi nhánh Quận Tân Bình
+2. Chi nhánh Quận 1
+3. Chi nhánh Quận 3
+4. Chi nhánh Bình Thạnh
+5. Chi nhánh Gò Vấp
 
----
-
-## 🎨 Demo Flow (3 minutes)
-
-1. **Dashboard** - Show 5 branches with status
-2. **Branch Detail** - Click "Quận Tân Bình"
-3. **Forecast Chart** - Show hourly prediction
-4. **Best Time** - Highlight recommended hours
-5. **Check-in Simulation** - Add check-in → Update prediction
+**30 days history** (~3,600 records)
 
 ---
 
-**Track:** Financial Services (Shinhan Bank)
-**InnoBoost Deadline:** 3/5/2026
+## 🎨 Demo Flow
+
+### Scenario 1: Customer Finds Best Time
+1. Mở dashboard → Chọn "Chi nhánh Quận Tân Bình"
+2. Xem forecast → 11am đỏ (cao), 9am xanh (thấp)
+3. Hệ thống khuyến nghị: "Đến 9am hoặc 3pm"
+
+### Scenario 2: Real-time Update
+1. 5 khách check-in bất ngờ
+2. Prediction cập nhật: 10 phút → 25 phút
+3. Thông báo cho khách đang chờ
+
+### Scenario 3: Manager Optimization
+1. Manager xem forecast ngày mai
+2. Hệ thống khuyến nghị: "Thêm 2 nhân viên 11am-1pm"
+3. Điều chỉnh roster → Giảm wait time 40%
+
+---
+
+## 🔧 Configuration
+
+### Environment Variables
+```env
+# Alibaba Cloud Qwen API
+QWEN_API_KEY=your-api-key-here
+
+# App URL
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+### Qwen Models
+- **qwen-plus** - Balanced performance (recommended)
+- **qwen-max** - Highest accuracy (slower)
+- **qwen-turbo** - Fastest (lower accuracy)
+
+---
+
+## 📈 Expected Outcomes
+
+| Metric | Before | After (Expected) |
+|--------|--------|-------------------|
+| Avg wait time | 20-30 min | 10-15 min |
+| Peak hour utilization | 80% | 60% |
+| Customer satisfaction | NPS 30 | NPS 60 |
+| Staff efficiency | Manual | AI-optimized |
+
+---
+
+## 🚦 Roadmap
+
+### Phase 1: PoC (Current) ✅
+- [x] Mock data generator
+- [x] Dashboard UI
+- [x] Forecast visualization
+- [ ] Qwen API integration (Pending key)
+
+### Phase 2: Enhancement
+- [ ] Real-time check-in system
+- [ ] WebSocket updates
+- [ ] Admin/Manager view
+- [ ] Notification system
+
+### Phase 3: Production
+- [ ] Real database (PostgreSQL)
+- [ ] Authentication
+- [ ] API rate limiting
+- [ ] Monitoring & logging
+
+---
+
+## 🔗 Links
+
+- **GitHub:** https://github.com/DATMETACOM/kts-qwen-ai
+- **InnoBoost:** https://innoboost.shinhan.com
+- **Devpost:** https://qwen-ai-build-day.devpost.com
+- **Qwen Docs:** https://qwen.readthedocs.io/
+
+---
+
+## 👥 Team
+
+- **Track:** Financial Services (Shinhan Bank)
+- **Use Case:** SB10 - Branch Traffic Prediction
+- **Tech Stack:** Next.js 14, TypeScript, Tailwind CSS, Qwen AI
+
+---
+
+## 📝 License
+
+PoC for Shinhan InnoBoost 2026 - Internal use only
+
+---
+
+**Built with ❤️ for Qwen AI Build Day 2026**

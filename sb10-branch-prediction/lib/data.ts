@@ -1,6 +1,6 @@
 // SB10 - Mock Data Generator
 
-import { Branch, TrafficRecord } from "../types";
+import { Branch, TrafficRecord, HourlyForecast } from "../types";
 
 // 5 Branches in HCMC
 export const BRANCHES: Branch[] = [
@@ -146,3 +146,40 @@ export const SIMULATED_CHECK_INS = [
   { branchId: "bn-004", count: 3 },
   { branchId: "bn-005", count: 0 }
 ];
+
+// Generate mock hourly forecast for today
+export function generateHourlyForecast(): HourlyForecast[] {
+  const forecast: HourlyForecast[] = [];
+  for (let hour = 8; hour < 17; hour++) {
+    let customers = 5;
+    let congestionLevel: "low" | "medium" | "high" = "low";
+
+    // Lunch rush
+    if (hour >= 11 && hour <= 13) {
+      customers = 25 + Math.floor(Math.random() * 10);
+      congestionLevel = "high";
+    } else if (hour >= 14 && hour <= 15) {
+      customers = 10 + Math.floor(Math.random() * 5);
+      congestionLevel = "medium";
+    } else if (hour === 16) {
+      customers = 8 + Math.floor(Math.random() * 4);
+      congestionLevel = "low";
+    } else if (hour === 9 || hour === 10) {
+      customers = 8 + Math.floor(Math.random() * 3);
+      congestionLevel = "low";
+    }
+
+    const waitTime = Math.max(5, Math.floor(customers * 1.3));
+
+    forecast.push({
+      hour,
+      predictedCustomers: customers,
+      predictedWaitTime: waitTime,
+      congestionLevel: waitTime > 20 ? "high" : waitTime > 10 ? "medium" : "low",
+    });
+  }
+  return forecast;
+}
+
+// Re-export types for convenience
+export type { HourlyForecast, Prediction, Branch, TrafficRecord, CheckIn, QwenPredictionRequest } from "../types";
