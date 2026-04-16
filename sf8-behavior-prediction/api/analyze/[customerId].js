@@ -13,11 +13,18 @@ function getDuration(startedAt) {
   return Math.max(0, Date.now() - startedAt);
 }
 
+function extractProductRows(productCatalog) {
+  if (Array.isArray(productCatalog)) return productCatalog;
+  if (Array.isArray(productCatalog?.products)) return productCatalog.products;
+  return [];
+}
+
 function baseScope(productCatalog) {
+  const rows = extractProductRows(productCatalog);
   return {
     boundary: "read_only",
     pii_handling: "masked_payload_only",
-    products_allowed: productCatalog.map((item) => item.product_name || item.name).filter(Boolean),
+    products_allowed: rows.map((item) => item.product_name || item.name).filter(Boolean),
     required_fields: [
       "recommended_product",
       "behavioral_rationale",
