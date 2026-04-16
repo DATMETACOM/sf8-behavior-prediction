@@ -129,6 +129,7 @@ export default function Dashboard() {
   const [chatInput, setChatInput] = useState("");
 
   const chatViewportRef = useRef(null);
+  const workspaceRef = useRef(null);
 
   useEffect(() => {
     let mounted = true;
@@ -207,6 +208,10 @@ export default function Dashboard() {
     setSelectedCustomerId(customer.customer_id);
     setChatInput("");
     ensureConversation(customer);
+
+    if (workspaceRef.current) {
+      workspaceRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
 
     if (!analysisByCustomer[customer.customer_id] && !analysisLoadingByCustomer[customer.customer_id]) {
       await loadAnalysis(customer.customer_id);
@@ -433,7 +438,10 @@ export default function Dashboard() {
             ) : null}
           </article>
 
-          <article className="flex min-h-[640px] flex-col rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <article
+            ref={workspaceRef}
+            className="flex min-h-[640px] flex-col rounded-2xl border border-slate-200 bg-white shadow-sm"
+          >
             <header className="border-b border-slate-200 px-5 py-4">
               <h3 className="text-lg font-semibold">Advisory Workspace</h3>
               <p className="mt-1 text-xs text-slate-500">
