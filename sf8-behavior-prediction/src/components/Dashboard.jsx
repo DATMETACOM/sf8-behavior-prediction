@@ -3,9 +3,9 @@ import { SendHorizontal, X } from "lucide-react";
 import { fetchAnalysis, fetchCustomers, sendCopilotMessage } from "../services/api.js";
 
 const QUICK_PROMPTS = [
-  "Customer is challenging the interest rate. Provide a compliant response.",
-  "Summarize the strongest trust signals in 3 concise points.",
-  "Give a next-call script for conversion in under 80 words.",
+  "Khách hàng phản biện về lãi suất, hãy gợi ý cách xử lý phù hợp.",
+  "Tóm tắt 3 tín hiệu tin cậy mạnh nhất để thuyết phục khách hàng.",
+  "Soạn kịch bản chốt cuộc gọi dưới 80 từ.",
 ];
 
 const RISK_STYLES = {
@@ -69,6 +69,21 @@ function trimText(value, maxLength = 220) {
   return `${text.slice(0, maxLength)}...`;
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function shouldRetryCopilot(error) {
+  const message = String(error?.message || "").toLowerCase();
+  return (
+    message.includes("http 502") ||
+    message.includes("failed to fetch") ||
+    message.includes("network") ||
+    message.includes("timeout") ||
+    message.includes("qwen")
+  );
+}
+
 function buildAnalysisMessages(analysis) {
   const rationaleLines = safeArray(analysis.behavioral_rationale).slice(0, 3);
   const evidenceLines = safeArray(analysis.statistical_evidence).slice(0, 3);
@@ -79,37 +94,37 @@ function buildAnalysisMessages(analysis) {
       role: "assistant",
       kind: "analysis",
       content: [
-        "Analysis package is ready.",
-        `Recommended Product: ${analysis.recommended_product || "n/a"}`,
-        `Advisory Script: ${trimText(analysis.sales_pitch_script, 320)}`,
+        "Gói phân tích đã sẵn sàng.",
+        `Sản phẩm đề xuất: ${analysis.recommended_product || "N/A"}`,
+        `Kịch bản tư vấn: ${trimText(analysis.sales_pitch_script, 320)}`,
       ].join("\n"),
     },
     {
       role: "assistant",
       kind: "analysis",
       content:
-        "Behavioral Insights:\n" +
+        "Luận điểm hành vi:\n" +
         (rationaleLines.length
           ? rationaleLines.map((item) => `- ${item}`).join("\n")
-          : "- No behavioral rationale returned."),
+          : "- Chưa có luận điểm hành vi."),
     },
     {
       role: "assistant",
       kind: "analysis",
       content:
-        "Quantitative Evidence:\n" +
+        "Dẫn chứng định lượng:\n" +
         (evidenceLines.length
           ? evidenceLines.map((item) => `- ${item}`).join("\n")
-          : "- No quantitative evidence returned."),
+          : "- Chưa có dẫn chứng định lượng."),
     },
     {
       role: "assistant",
       kind: "analysis",
       content:
-        "Risk and Upsell Notes:\n" +
+        "Lưu ý rủi ro và Upsell:\n" +
         (riskLines.length
           ? riskLines.map((item) => `- ${item}`).join("\n")
-          : "- No risk notes returned."),
+          : "- Chưa có ghi chú rủi ro."),
     },
   ];
 }
@@ -215,7 +230,7 @@ export default function Dashboard() {
             role: "assistant",
             kind: "welcome",
             content:
-              "Advisory workspace is ready. Click 'Load Analysis Context' to receive script and insight directly in this chat.",
+              "Không gian tư vấn đã sẵn sàng. Nhấn 'Tải ngữ cảnh phân tích' để đưa script và insight trực tiếp vào khung chat.",
           },
         ],
       };
@@ -275,7 +290,7 @@ export default function Dashboard() {
           {
             role: "assistant",
             kind: "error",
-            content: `Analysis request failed: ${err.message}`,
+            content: `Yêu cầu phân tích thất bại: ${err.message}`,
           },
         ],
       }));
@@ -309,13 +324,32 @@ export default function Dashboard() {
     }));
 
     try {
-      const { data } = await sendCopilotMessage(customerId, message, nextHistory.slice(-8), {
-        withMeta: true,
-        analysis: analysisByCustomer[customerId] || undefined,
-      });
+      let payload = null;
+      let lastError = null;
 
-      const reply = String(data?.reply || "").trim();
-      if (!reply) throw new Error("Copilot returned an empty response.");
+      for (let attempt = 1; attempt <= 2; attempt += 1) {
+        try {
+          const response = await sendCopilotMessage(customerId, message, nextHistory.slice(-8), {
+            withMeta: true,
+            analysis: analysisByCustomer[customerId] || undefined,
+          });
+          payload = response?.data || null;
+          lastError = null;
+          break;
+        } catch (err) {
+          lastError = err;
+          if (attempt < 2 && shouldRetryCopilot(err)) {
+            await sleep(900);
+            continue;
+          }
+          break;
+        }
+      }
+
+      if (lastError) throw lastError;
+
+      const reply = String(payload?.reply || "").trim();
+      if (!reply) throw new Error("Copilot chưa trả nội dung phản hồi.");
 
       setChatByCustomer((prev) => ({
         ...prev,
@@ -329,7 +363,7 @@ export default function Dashboard() {
           {
             role: "assistant",
             kind: "error",
-            content: `Copilot request failed: ${err.message}`,
+            content: `Yêu cầu Copilot thất bại: ${err.message}`,
           },
         ],
       }));
@@ -503,10 +537,10 @@ export default function Dashboard() {
                       disabled={isAnalysisLoading}
                       className="rounded-md border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
                     >
-                      {isAnalysisLoading ? "Loading context..." : "Load Analysis Context"}
+                      {isAnalysisLoading ? "Đang tải ngữ cảnh..." : "Tải ngữ cảnh phân tích"}
                     </button>
                     <span className="text-xs text-slate-500">
-                      {currentAnalysis ? "Context ready" : "Context not loaded"}
+                      {currentAnalysis ? "Đã có ngữ cảnh" : "Chưa tải ngữ cảnh"}
                     </span>
                   </div>
                 </div>
@@ -531,13 +565,13 @@ export default function Dashboard() {
 
                   {isAnalysisLoading ? (
                     <div className="mr-auto max-w-[92%] rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-900">
-                      Building analysis context for this customer...
+                      Đang xây dựng ngữ cảnh phân tích cho khách hàng...
                     </div>
                   ) : null}
 
                   {isChatLoading ? (
                     <div className="mr-auto max-w-[92%] rounded-lg bg-white px-3 py-2 text-sm text-slate-500">
-                      Copilot is drafting a response...
+                      Copilot đang soạn phản hồi...
                     </div>
                   ) : null}
                 </div>
@@ -562,7 +596,7 @@ export default function Dashboard() {
                       ref={chatInputRef}
                       value={chatInput}
                       onChange={(event) => setChatInput(event.target.value)}
-                      placeholder="Ask for rebuttal handling, evidence framing, or next-step conversion script..."
+                      placeholder="Nhập câu hỏi xử lý phản biện, dẫn chứng thuyết phục hoặc kịch bản chốt cuộc gọi..."
                       rows={2}
                       className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-sky-300 transition focus:ring"
                     />
