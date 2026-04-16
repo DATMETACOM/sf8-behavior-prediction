@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { SendHorizontal } from "lucide-react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { SendHorizontal, X } from "lucide-react";
 import { fetchAnalysis, fetchCustomers, sendCopilotMessage } from "../services/api.js";
 
 const QUICK_PROMPTS = [
@@ -120,6 +120,8 @@ export default function Dashboard() {
   const [error, setError] = useState("");
 
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
+
   const [analysisByCustomer, setAnalysisByCustomer] = useState({});
   const [analysisFingerprintByCustomer, setAnalysisFingerprintByCustomer] = useState({});
   const [analysisLoadingByCustomer, setAnalysisLoadingByCustomer] = useState({});
@@ -129,7 +131,7 @@ export default function Dashboard() {
   const [chatInput, setChatInput] = useState("");
 
   const chatViewportRef = useRef(null);
-  const workspaceRef = useRef(null);
+  const chatInputRef = useRef(null);
 
   useEffect(() => {
     let mounted = true;
@@ -159,11 +161,19 @@ export default function Dashboard() {
   }, [customers]);
 
   useEffect(() => {
-    if (!customers.length || selectedCustomerId) return;
-    if (!heroCustomer) return;
-    activateCustomer(heroCustomer);
+    if (!customers.length || selectedCustomerId || !heroCustomer) return;
+    setSelectedCustomerId(heroCustomer.customer_id);
+    ensureConversation(heroCustomer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [customers, heroCustomer, selectedCustomerId]);
+
+  useEffect(() => {
+    if (!isWorkspaceOpen) return;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isWorkspaceOpen]);
 
   const kpiCards = useMemo(() => buildKpiCards(customers), [customers]);
 
@@ -173,7 +183,9 @@ export default function Dashboard() {
   );
 
   const currentChat = selectedCustomer ? chatByCustomer[selectedCustomer.customer_id] || [] : [];
-  const currentAnalysis = selectedCustomer ? analysisByCustomer[selectedCustomer.customer_id] || null : null;
+  const currentAnalysis = selectedCustomer
+    ? analysisByCustomer[selectedCustomer.customer_id] || null
+    : null;
   const isAnalysisLoading = selectedCustomer
     ? Boolean(analysisLoadingByCustomer[selectedCustomer.customer_id])
     : false;
@@ -182,10 +194,16 @@ export default function Dashboard() {
     : false;
 
   useEffect(() => {
+    if (!isWorkspaceOpen) return;
     const viewport = chatViewportRef.current;
     if (!viewport) return;
     viewport.scrollTop = viewport.scrollHeight;
-  }, [currentChat.length, selectedCustomerId, isAnalysisLoading, isChatLoading]);
+  }, [currentChat.length, selectedCustomerId, isAnalysisLoading, isChatLoading, isWorkspaceOpen]);
+
+  useEffect(() => {
+    if (!isWorkspaceOpen || !selectedCustomer) return;
+    chatInputRef.current?.focus();
+  }, [isWorkspaceOpen, selectedCustomer]);
 
   function ensureConversation(customer) {
     setChatByCustomer((prev) => {
@@ -204,14 +222,15 @@ export default function Dashboard() {
     });
   }
 
+  function closeWorkspace() {
+    setIsWorkspaceOpen(false);
+  }
+
   async function activateCustomer(customer) {
     setSelectedCustomerId(customer.customer_id);
+    setIsWorkspaceOpen(true);
     setChatInput("");
     ensureConversation(customer);
-
-    if (workspaceRef.current) {
-      workspaceRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
 
     if (!analysisByCustomer[customer.customer_id] && !analysisLoadingByCustomer[customer.customer_id]) {
       await loadAnalysis(customer.customer_id);
@@ -362,7 +381,7 @@ export default function Dashboard() {
           )}
         </section>
 
-        <section className="mt-5 grid gap-5 xl:grid-cols-[1.4fr,1fr]">
+        <section className="mt-5">
           <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold">Target Customer Pipeline</h2>
@@ -392,7 +411,7 @@ export default function Dashboard() {
                       return (
                         <tr
                           key={customer.customer_id}
-                          className={`border-b border-gray-200 align-top ${isSelected ? "bg-sky-50/50" : ""}`}
+                          className={`border-b border-gray-200 align-top ${isSelected ? "bg-sky-50/60" : ""}`}
                         >
                           <td className="py-4 pr-3">
                             <p className="font-medium text-slate-900">{customer.full_name}</p>
@@ -437,16 +456,37 @@ export default function Dashboard() {
               </div>
             ) : null}
           </article>
+        </section>
+      </section>
 
-          <article
-            ref={workspaceRef}
-            className="flex min-h-[640px] flex-col rounded-2xl border border-slate-200 bg-white shadow-sm"
-          >
-            <header className="border-b border-slate-200 px-5 py-4">
-              <h3 className="text-lg font-semibold">Advisory Workspace</h3>
-              <p className="mt-1 text-xs text-slate-500">
-                Single conversation stream: analytics context and copilot guidance are shown directly in chat.
-              </p>
+      {isWorkspaceOpen ? (
+        <div className="fixed inset-0 z-50 p-3 sm:p-5">
+          <button
+            type="button"
+            onClick={closeWorkspace}
+            className="absolute inset-0 bg-slate-900/45"
+            aria-label="Close workspace"
+          />
+          <section className="relative mx-auto flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+            <header className="flex items-start justify-between border-b border-slate-200 px-5 py-4">
+              <div>
+                <h3 className="text-lg font-semibold">Advisory Workspace</h3>
+                {selectedCustomer ? (
+                  <p className="mt-1 text-xs text-slate-500">
+                    {selectedCustomer.full_name} | {selectedCustomer.customer_id} | {selectedCustomer.job_title}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-xs text-slate-500">No customer selected.</p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={closeWorkspace}
+                className="rounded-md border border-slate-300 p-2 text-slate-600 hover:bg-slate-50"
+                aria-label="Close"
+              >
+                <X size={16} />
+              </button>
             </header>
 
             {!selectedCustomer ? (
@@ -456,11 +496,7 @@ export default function Dashboard() {
             ) : (
               <>
                 <div className="border-b border-slate-200 px-5 py-3">
-                  <p className="text-sm font-semibold text-slate-900">{selectedCustomer.full_name}</p>
-                  <p className="text-xs text-slate-500">
-                    {selectedCustomer.customer_id} | {selectedCustomer.job_title}
-                  </p>
-                  <div className="mt-2 flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => loadAnalysis(selectedCustomer.customer_id, { force: true })}
@@ -475,10 +511,7 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                <div
-                  ref={chatViewportRef}
-                  className="flex-1 space-y-2 overflow-y-auto bg-slate-50 px-4 py-4"
-                >
+                <div ref={chatViewportRef} className="flex-1 space-y-2 overflow-y-auto bg-slate-50 px-4 py-4">
                   {currentChat.map((item, idx) => (
                     <div
                       key={`chat-${idx}`}
@@ -526,6 +559,7 @@ export default function Dashboard() {
 
                   <div className="flex items-end gap-2">
                     <textarea
+                      ref={chatInputRef}
                       value={chatInput}
                       onChange={(event) => setChatInput(event.target.value)}
                       placeholder="Ask for rebuttal handling, evidence framing, or next-step conversion script..."
@@ -544,9 +578,9 @@ export default function Dashboard() {
                 </div>
               </>
             )}
-          </article>
-        </section>
-      </section>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }
