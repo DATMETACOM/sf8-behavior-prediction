@@ -313,7 +313,7 @@ export default function Dashboard() {
         customerId,
         message,
         nextHistory.slice(-8),
-        { withMeta: true }
+        { withMeta: true, analysis }
       );
 
       const reply = String(payload?.reply || "").trim();
@@ -510,7 +510,7 @@ export default function Dashboard() {
                     <p className="text-sm font-semibold text-sky-700">Advisory Profile</p>
                     <h3 className="text-xl font-bold">{selectedCustomer.full_name}</h3>
                     <p className="text-xs text-slate-500">
-                      {selectedCustomer.customer_id} • {selectedCustomer.job_title}
+                      {selectedCustomer.customer_id} â€¢ {selectedCustomer.job_title}
                     </p>
                   </div>
                   <button
@@ -646,7 +646,7 @@ export default function Dashboard() {
                           >
                             <span className="font-medium text-slate-700">{layerText(layer.id)}</span>
                             <span className="text-slate-500">
-                              {layer.status || "n/a"} · {formatLatency(layer.latency_ms)}
+                              {layer.status || "n/a"} Â· {formatLatency(layer.latency_ms)}
                             </span>
                           </div>
                         ))

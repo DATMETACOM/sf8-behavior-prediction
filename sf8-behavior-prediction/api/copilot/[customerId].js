@@ -31,6 +31,28 @@ function parseBody(req) {
   return req.body;
 }
 
+function normalizeStringArray(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => String(item || "").trim()).filter(Boolean);
+}
+
+function normalizeClientAnalysis(value) {
+  if (!value || typeof value !== "object") return null;
+
+  const recommendedProduct = String(value.recommended_product || "").trim();
+  const salesPitchScript = String(value.sales_pitch_script || "").trim();
+
+  if (!recommendedProduct || !salesPitchScript) return null;
+
+  return {
+    recommended_product: recommendedProduct,
+    behavioral_rationale: normalizeStringArray(value.behavioral_rationale),
+    statistical_evidence: normalizeStringArray(value.statistical_evidence),
+    sales_pitch_script: salesPitchScript,
+    risk_warning_and_upsell: normalizeStringArray(value.risk_warning_and_upsell),
+  };
+}
+
 function baseScope(productCatalog) {
   const rows = extractProductRows(productCatalog);
   return {
@@ -110,19 +132,49 @@ export default async function handler(req, res) {
     deterministic_stats: customer.deterministic_stats,
   };
 
-  const analyzeStartedAt = Date.now();
+  const providedAnalysis = normalizeClientAnalysis(body.analysis);
+  let analysis = providedAnalysis;
+  let analyzeMs = 0;
+  let analyzeStatus = providedAnalysis ? "reused_from_client" : "ok";
 
+  if (!analysis) {
+    const analyzeStartedAt = Date.now();
+    try {
+      analysis = await analyzeWithQwen(maskedPayload, productCatalog);
+      analyzeMs = getDuration(analyzeStartedAt);
+    } catch (error) {
+      const totalMs = getDuration(requestStartedAt);
+      analyzeMs = getDuration(analyzeStartedAt);
+      analyzeStatus = "failed";
+
+      return res.status(502).json({
+        detail: `Qwen copilot failed: ${error.message}`,
+        _meta: {
+          trace_id: traceId,
+          response_at: nowIso(),
+          model: (process.env.QWEN_MODEL || "qwen3.6-plus").trim(),
+          region_endpoint: (process.env.BASE_URL || "https://dashscope-intl.aliyuncs.com/compatible-mode/v1").trim(),
+          latency_ms: totalMs,
+          scope: baseScope(productCatalog),
+          layers: [
+            { id: "L1_CUSTOMER_LOOKUP", status: "ok", latency_ms: customerLookupMs },
+            { id: "L2_PRODUCT_SCOPE", status: "ok", latency_ms: catalogLoadMs },
+            { id: "L3_QWEN_ANALYZE", status: analyzeStatus, latency_ms: analyzeMs },
+          ],
+        },
+      });
+    }
+  }
+
+  const copilotStartedAt = Date.now();
   try {
-    const analysis = await analyzeWithQwen(maskedPayload, productCatalog);
-    const analyzeMs = getDuration(analyzeStartedAt);
-
-    const copilotStartedAt = Date.now();
     const reply = await copilotWithQwen({
       customer,
       analysis,
       message,
       history,
     });
+
     const copilotMs = getDuration(copilotStartedAt);
     const totalMs = getDuration(requestStartedAt);
 
@@ -138,14 +190,14 @@ export default async function handler(req, res) {
         layers: [
           { id: "L1_CUSTOMER_LOOKUP", status: "ok", latency_ms: customerLookupMs },
           { id: "L2_PRODUCT_SCOPE", status: "ok", latency_ms: catalogLoadMs },
-          { id: "L3_QWEN_ANALYZE", status: "ok", latency_ms: analyzeMs },
+          { id: "L3_QWEN_ANALYZE", status: analyzeStatus, latency_ms: analyzeMs },
           { id: "L4_QWEN_COPILOT", status: "ok", latency_ms: copilotMs },
         ],
       },
     });
   } catch (error) {
+    const copilotMs = getDuration(copilotStartedAt);
     const totalMs = getDuration(requestStartedAt);
-    const failedAnalyzeMs = getDuration(analyzeStartedAt);
 
     return res.status(502).json({
       detail: `Qwen copilot failed: ${error.message}`,
@@ -159,7 +211,8 @@ export default async function handler(req, res) {
         layers: [
           { id: "L1_CUSTOMER_LOOKUP", status: "ok", latency_ms: customerLookupMs },
           { id: "L2_PRODUCT_SCOPE", status: "ok", latency_ms: catalogLoadMs },
-          { id: "L3_QWEN_ANALYZE", status: "failed", latency_ms: failedAnalyzeMs },
+          { id: "L3_QWEN_ANALYZE", status: analyzeStatus, latency_ms: analyzeMs },
+          { id: "L4_QWEN_COPILOT", status: "failed", latency_ms: copilotMs },
         ],
       },
     });

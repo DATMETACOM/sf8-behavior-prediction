@@ -124,12 +124,21 @@ function getLayerSummary(meta) {
       layers: getLayerSummary(analyzeRes.json?._meta),
     });
 
+    const analysisBundle = {
+      recommended_product: analyzeRes.json.recommended_product,
+      behavioral_rationale: analyzeRes.json.behavioral_rationale,
+      statistical_evidence: analyzeRes.json.statistical_evidence,
+      sales_pitch_script: analyzeRes.json.sales_pitch_script,
+      risk_warning_and_upsell: analyzeRes.json.risk_warning_and_upsell,
+    };
+
     const copilotRes = await timedJson(`/api/copilot/${chosenCustomerId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         message: COPILOT_PROMPT,
         history: [],
+        analysis: analysisBundle,
       }),
     });
 

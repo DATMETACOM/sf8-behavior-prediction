@@ -46,9 +46,18 @@ export function fetchAnalysis(customerId, config = {}) {
 }
 
 export function sendCopilotMessage(customerId, message, history, config = {}) {
+  const payload = {
+    message,
+    history,
+  };
+  if (config.analysis && typeof config.analysis === "object") {
+    payload.analysis = config.analysis;
+  }
+  const { analysis, ...requestConfig } = config;
+
   return request(`/api/copilot/${customerId}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, history }),
-  }, config);
+    body: JSON.stringify(payload),
+  }, requestConfig);
 }
