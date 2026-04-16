@@ -2,10 +2,11 @@
   "buildCommand": "npm install && npm run build",
   "outputDirectory": "dist",
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/", "destination": "/index.html" },
     { "source": "/customer/(.*)", "destination": "/index.html" },
     { "source": "/simulation", "destination": "/index.html" },
-    { "source": "/export", "destination": "/index.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/export", "destination": "/index.html" }
   ],
   "headers": [
     {
@@ -17,8 +18,5 @@
         }
       ]
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
