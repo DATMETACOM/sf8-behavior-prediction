@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { SendHorizontal, X } from "lucide-react";
 import { fetchAnalysis, fetchCustomers, sendCopilotMessage } from "../services/api.js";
 
@@ -80,7 +80,9 @@ function shouldRetryCopilot(error) {
     message.includes("failed to fetch") ||
     message.includes("network") ||
     message.includes("timeout") ||
-    message.includes("qwen")
+    message.includes("qwen") ||
+    message.includes("503") ||
+    message.includes("504")
   );
 }
 
@@ -143,10 +145,12 @@ export default function Dashboard() {
 
   const [chatByCustomer, setChatByCustomer] = useState({});
   const [chatLoadingByCustomer, setChatLoadingByCustomer] = useState({});
+  const [chatProgressByCustomer, setChatProgressByCustomer] = useState({});
   const [chatInput, setChatInput] = useState("");
 
   const chatViewportRef = useRef(null);
   const chatInputRef = useRef(null);
+  const chatProgressTimersRef = useRef({});
 
   useEffect(() => {
     let mounted = true;
@@ -190,6 +194,14 @@ export default function Dashboard() {
     };
   }, [isWorkspaceOpen]);
 
+  useEffect(() => {
+    return () => {
+      const timers = Object.values(chatProgressTimersRef.current);
+      for (const timer of timers) clearInterval(timer);
+      chatProgressTimersRef.current = {};
+    };
+  }, []);
+
   const kpiCards = useMemo(() => buildKpiCards(customers), [customers]);
 
   const selectedCustomer = useMemo(
@@ -207,6 +219,9 @@ export default function Dashboard() {
   const isChatLoading = selectedCustomer
     ? Boolean(chatLoadingByCustomer[selectedCustomer.customer_id])
     : false;
+  const chatProgressPercent = selectedCustomer
+    ? Number(chatProgressByCustomer[selectedCustomer.customer_id] || 0)
+    : 0;
 
   useEffect(() => {
     if (!isWorkspaceOpen) return;
@@ -241,6 +256,56 @@ export default function Dashboard() {
     setIsWorkspaceOpen(false);
   }
 
+  function clearChatProgressTimer(customerId) {
+    const timer = chatProgressTimersRef.current[customerId];
+    if (timer) {
+      clearInterval(timer);
+      delete chatProgressTimersRef.current[customerId];
+    }
+  }
+
+  function startChatProgress(customerId) {
+    clearChatProgressTimer(customerId);
+    const startedAt = Date.now();
+
+    setChatProgressByCustomer((prev) => ({
+      ...prev,
+      [customerId]: 4,
+    }));
+
+    chatProgressTimersRef.current[customerId] = setInterval(() => {
+      const elapsedMs = Date.now() - startedAt;
+      const nextPercent = Math.min(92, 4 + Math.round((elapsedMs / 55000) * 88));
+      setChatProgressByCustomer((prev) => ({
+        ...prev,
+        [customerId]: nextPercent,
+      }));
+    }, 500);
+  }
+
+  function finishChatProgress(customerId, success) {
+    clearChatProgressTimer(customerId);
+    if (!success) {
+      setChatProgressByCustomer((prev) => ({
+        ...prev,
+        [customerId]: 0,
+      }));
+      return;
+    }
+
+    setChatProgressByCustomer((prev) => ({
+      ...prev,
+      [customerId]: 100,
+    }));
+
+    setTimeout(() => {
+      setChatProgressByCustomer((prev) => ({
+        ...prev,
+        [customerId]: 0,
+      }));
+    }, 650);
+  }
+
   async function activateCustomer(customer) {
     setSelectedCustomerId(customer.customer_id);
     setIsWorkspaceOpen(true);
@@ -253,7 +318,7 @@ export default function Dashboard() {
   }
 
   async function loadAnalysis(customerId, { force = false } = {}) {
-    if (!force && analysisByCustomer[customerId]) return;
+    if (!force && analysisByCustomer[customerId]) return analysisByCustomer[customerId];
 
     setAnalysisLoadingByCustomer((prev) => ({
       ...prev,
@@ -282,6 +347,7 @@ export default function Dashboard() {
           [customerId]: nextFingerprint,
         }));
       }
+      return data;
     } catch (err) {
       setChatByCustomer((prev) => ({
         ...prev,
@@ -294,6 +360,7 @@ export default function Dashboard() {
           },
         ],
       }));
+      return null;
     } finally {
       setAnalysisLoadingByCustomer((prev) => ({
         ...prev,
@@ -322,8 +389,32 @@ export default function Dashboard() {
       ...prev,
       [customerId]: true,
     }));
+    startChatProgress(customerId);
 
+    let isSuccessful = false;
     try {
+      let analysisContext = analysisByCustomer[customerId] || null;
+      if (!analysisContext) {
+        setChatByCustomer((prev) => ({
+          ...prev,
+          [customerId]: [
+            ...(prev[customerId] || []),
+            {
+              role: "assistant",
+              kind: "analysis",
+              content:
+                "Đang tải ngữ cảnh phân tích cho khách hàng này trước khi gửi truy vấn tới Copilot...",
+            },
+          ],
+        }));
+
+        analysisContext = await loadAnalysis(customerId, { force: true });
+      }
+
+      if (!analysisContext) {
+        throw new Error("Không thể tải ngữ cảnh phân tích cho khách hàng.");
+      }
+
       let payload = null;
       let lastError = null;
 
@@ -331,7 +422,7 @@ export default function Dashboard() {
         try {
           const response = await sendCopilotMessage(customerId, message, nextHistory.slice(-8), {
             withMeta: true,
-            analysis: analysisByCustomer[customerId] || undefined,
+            analysis: analysisContext,
           });
           payload = response?.data || null;
           lastError = null;
@@ -355,6 +446,7 @@ export default function Dashboard() {
         ...prev,
         [customerId]: [...(prev[customerId] || []), { role: "assistant", content: reply }],
       }));
+      isSuccessful = true;
     } catch (err) {
       setChatByCustomer((prev) => ({
         ...prev,
@@ -372,6 +464,7 @@ export default function Dashboard() {
         ...prev,
         [customerId]: false,
       }));
+      finishChatProgress(customerId, isSuccessful);
     }
   }
 
@@ -571,7 +664,13 @@ export default function Dashboard() {
 
                   {isChatLoading ? (
                     <div className="mr-auto max-w-[92%] rounded-lg bg-white px-3 py-2 text-sm text-slate-500">
-                      Copilot đang soạn phản hồi...
+                      <p>Copilot đang soạn phản hồi... khoảng {chatProgressPercent}%</p>
+                      <div className="mt-2 h-1.5 w-full rounded-full bg-slate-200">
+                        <div
+                          className="h-1.5 rounded-full bg-sky-600 transition-all"
+                          style={{ width: `${chatProgressPercent}%` }}
+                        />
+                      </div>
                     </div>
                   ) : null}
                 </div>

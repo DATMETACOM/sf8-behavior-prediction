@@ -9,6 +9,7 @@ function getEnv() {
   if (!apiKey) {
     throw new Error("Missing QWEN_API_KEY in Vercel environment");
   }
+
   return {
     apiKey,
     baseUrl: (process.env.BASE_URL || "https://dashscope-intl.aliyuncs.com/compatible-mode/v1").trim(),
@@ -19,6 +20,7 @@ function getEnv() {
 function extractJson(rawContent) {
   const text = String(rawContent || "").trim();
   if (!text) throw new Error("Empty response from Qwen");
+
   try {
     const parsed = JSON.parse(text);
     if (parsed && typeof parsed === "object") return parsed;
@@ -35,12 +37,14 @@ function normalizeList(value) {
   if (Array.isArray(value)) {
     return value.map((item) => String(item).trim()).filter(Boolean);
   }
+
   if (typeof value === "string") {
     return value
       .split(/\n|;|•/g)
       .map((item) => item.trim().replace(/^[-•]\s*/, ""))
       .filter(Boolean);
   }
+
   return [];
 }
 
@@ -51,6 +55,7 @@ async function qwenChat(messages, { jsonMode = false, temperature = 0.2 } = {}) 
     messages,
     temperature,
   };
+
   if (jsonMode) payload.response_format = { type: "json_object" };
 
   const response = await fetch(`${baseUrl}/chat/completions`, {
@@ -94,6 +99,7 @@ export async function analyzeWithQwen(maskedPayload, productCatalog) {
 
   const parsed = extractJson(raw);
   const recommended = String(parsed.recommended_product || "").trim();
+
   if (!PRODUCT_NAMES.includes(recommended)) {
     throw new Error(`Qwen returned invalid product: ${recommended || "EMPTY"}`);
   }
@@ -131,8 +137,11 @@ export async function copilotWithQwen({ customer, analysis, message, history }) 
     job_title: customer.pii_data.job_title,
     deterministic_stats: customer.deterministic_stats,
     analysis_layer3: analysis,
-    user_message: message,
   };
+
+  const userPrompt = `Hãy phân tích và trả lời câu hỏi: ${JSON.stringify(
+    String(message || "")
+  )} với bối cảnh là:\n${JSON.stringify(contextPayload, null, 2)}`;
 
   const raw = await qwenChat(
     [
@@ -140,7 +149,7 @@ export async function copilotWithQwen({ customer, analysis, message, history }) 
       ...normalizedHistory,
       {
         role: "user",
-        content: `Ngữ cảnh tư vấn:\n${JSON.stringify(contextPayload, null, 2)}`,
+        content: userPrompt,
       },
     ],
     { jsonMode: false, temperature: 0.35 }
@@ -148,4 +157,3 @@ export async function copilotWithQwen({ customer, analysis, message, history }) 
 
   return String(raw || "").trim();
 }
-
