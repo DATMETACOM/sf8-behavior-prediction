@@ -27,7 +27,7 @@ def load_settings() -> Settings:
     return Settings(
         qwen_api_key=qwen_api_key,
         base_url=os.getenv("BASE_URL", "https://dashscope-intl.aliyuncs.com/compatible-mode/v1").strip(),
-        qwen_model=os.getenv("QWEN_MODEL", "qwen3.6-plus").strip(),
+        qwen_model=os.getenv("QWEN_MODEL", "qwen3-max").strip(),
         data_file=root / "customers_data.json",
         product_catalog_file=root / "Product_Catalog.json",
     )

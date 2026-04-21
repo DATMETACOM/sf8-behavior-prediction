@@ -235,7 +235,7 @@ async function tryQwenRewrite(apiKey, question, deterministic) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'qwen-plus',
+      model: 'qwen3-max',
       input: {
         messages: [
           {

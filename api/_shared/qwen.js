@@ -13,7 +13,7 @@ function getEnv() {
   return {
     apiKey,
     baseUrl: (process.env.BASE_URL || "https://dashscope-intl.aliyuncs.com/compatible-mode/v1").trim(),
-    model: (process.env.QWEN_MODEL || "qwen3.6-plus").trim(),
+    model: (process.env.QWEN_MODEL || "qwen3-max").trim(),
   };
 }
 

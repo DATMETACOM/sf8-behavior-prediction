@@ -69,7 +69,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'qwen-plus',
+        model: 'qwen3-max',
         input: {
           messages: [
             {
@@ -110,7 +110,7 @@ export default async function handler(req, res) {
         ? parsed.reasoning.trim()
         : 'Qwen enhancement applied with conservative adjustment.',
       source: 'qwen',
-      model: payload?.output?.model || 'qwen-plus'
+      model: payload?.output?.model || 'qwen3-max'
     })
   } catch (error) {
     return res.status(200).json({

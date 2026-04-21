@@ -1,4 +1,4 @@
-﻿# 🏦 Cuca-Insider-AI - AI-powered Sales Closing Assistant
+# 🏦 Cuca-Insider-AI - AI-powered Sales Closing Assistant
 
 Cuca-Insider-AI is a hackathon PoC for **[SF8] Shinhan Future's Lab**.
 The product helps telesales teams analyze thin-file new customers from alternative data and generate a tactical **Next Best Offer (NBO)** script with Qwen.
@@ -38,8 +38,8 @@ Update `.env`:
 
 ```env
 QWEN_API_KEY=your_real_qwen_api_key
-BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-QWEN_MODEL=qwen-plus
+BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+QWEN_MODEL=qwen3-max
 ```
 
 Generate mock dataset (JSON + CSV):

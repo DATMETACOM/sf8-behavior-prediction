@@ -152,7 +152,7 @@ export default async function handler(req, res) {
         _meta: {
           trace_id: traceId,
           response_at: nowIso(),
-          model: (process.env.QWEN_MODEL || "qwen3.6-plus").trim(),
+          model: (process.env.QWEN_MODEL || "qwen3-max").trim(),
           region_endpoint: (process.env.BASE_URL || "https://dashscope-intl.aliyuncs.com/compatible-mode/v1").trim(),
           latency_ms: totalMs,
           scope: baseScope(productCatalog),
@@ -183,7 +183,7 @@ export default async function handler(req, res) {
       _meta: {
         trace_id: traceId,
         response_at: nowIso(),
-        model: (process.env.QWEN_MODEL || "qwen3.6-plus").trim(),
+        model: (process.env.QWEN_MODEL || "qwen3-max").trim(),
         region_endpoint: (process.env.BASE_URL || "https://dashscope-intl.aliyuncs.com/compatible-mode/v1").trim(),
         latency_ms: totalMs,
         scope: baseScope(productCatalog),
@@ -204,7 +204,7 @@ export default async function handler(req, res) {
       _meta: {
         trace_id: traceId,
         response_at: nowIso(),
-        model: (process.env.QWEN_MODEL || "qwen3.6-plus").trim(),
+        model: (process.env.QWEN_MODEL || "qwen3-max").trim(),
         region_endpoint: (process.env.BASE_URL || "https://dashscope-intl.aliyuncs.com/compatible-mode/v1").trim(),
         latency_ms: totalMs,
         scope: baseScope(productCatalog),
