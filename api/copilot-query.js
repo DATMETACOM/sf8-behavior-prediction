@@ -1,4 +1,4 @@
-const QWEN_API_URL = 'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation'
+const QWEN_API_URL = process.env.QWEN_API_URL || 'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation'
 
 function clampConfidence(value) {
   const num = Number(value)
