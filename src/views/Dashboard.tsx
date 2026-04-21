@@ -104,9 +104,9 @@ export default function Dashboard() {
 
   return (
     <div className="container">
-      <div className="section-title">(SF8) Cuca-Insider-AI - Quan tri van hanh</div>
+      <div className="section-title">[SF8] Sales Copilot Dashboard</div>
       <div className="section-subtitle">
-        (SF8) Cuca-Insider-AI - Cham diem khach hang qua Du lieu thay the (Alternative Data). AI chi dong vai tro phan tich va khuyen nghi.
+        Alternative Data Analysis → NBO Script Generation → Risk-Aware Upsell. AI-powered sales closing assistant for thin-file customers.
       </div>
 
       <div className="card-grid card-grid-4" style={{ marginBottom: '1.5rem' }}>

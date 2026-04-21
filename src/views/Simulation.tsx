@@ -36,9 +36,9 @@ export default function Simulation() {
 
   return (
     <div className="container">
-      <div className="section-title">Phan tich gia dinh</div>
+      <div className="section-title">[SF8] What-If Scenario Analysis</div>
       <div className="section-subtitle">
-        Phan tich gia dinh theo 3 bien: kenh tiep can, dieu kien san pham, tin hieu chuyen doi som
+        Simulate how changes in customer behavior affect lead scores and NBO recommendations
       </div>
 
       <div className="card" style={{ marginBottom: '2rem' }}>

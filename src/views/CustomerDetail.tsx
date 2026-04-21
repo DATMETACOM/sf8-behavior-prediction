@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getCustomerById, runSimulation } from '../dataProvider'
 import { PRODUCTS } from '../lib/data'
@@ -102,7 +102,7 @@ export default function CustomerDetail() {
   return (
     <div className="container">
       <button className="btn btn-outline" onClick={() => navigate('/')} style={{ marginBottom: '1.5rem' }}>
-        Quay lai Quan tri van hanh
+        Back to Dashboard
       </button>
 
       <div className="section-title">{customer.name}</div>
@@ -113,7 +113,7 @@ export default function CustomerDetail() {
       <div className="card" style={{ marginBottom: '1.5rem' }}>
         <div className="detail-layout">
           <div>
-            <div className="detail-label">Diem tiem nang (Lead Score)</div>
+            <div className="detail-label">Lead Score (NBO Potential)</div>
             <div style={{ fontSize: '2.5rem', fontWeight: 700, color: getScoreColor(overallScore) }}>
               {overallScore}/100
             </div>
