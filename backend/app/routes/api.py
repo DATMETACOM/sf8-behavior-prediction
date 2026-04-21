@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, HTTPException
 
 from app.config import load_settings
@@ -7,6 +9,8 @@ from app.schemas import AnalyzeResponse, CopilotRequest, CopilotResponse, Custom
 from app.services.catalog_service import load_product_catalog
 from app.services.customer_service import CustomerService
 from app.services.qwen_service import QwenService
+
+logger = logging.getLogger(__name__)
 
 settings = load_settings()
 customer_service = CustomerService(settings.data_file)
@@ -36,6 +40,7 @@ def analyze_customer(customer_id: str) -> AnalyzeResponse:
     try:
         ai_output = qwen_service.analyze_customer(masked_payload)
     except Exception as exc:  # noqa: BLE001
+        logger.exception("Qwen analyze failed for customer %s", customer_id)
         raise HTTPException(status_code=502, detail=f"Qwen analyze failed: {exc}") from exc
 
     return AnalyzeResponse(
@@ -67,6 +72,7 @@ def copilot(customer_id: str, payload: CopilotRequest) -> CopilotResponse:
             history=payload.history,
         )
     except Exception as exc:  # noqa: BLE001
+        logger.exception("Qwen copilot failed for customer %s", customer_id)
         raise HTTPException(status_code=502, detail=f"Qwen copilot failed: {exc}") from exc
 
     return CopilotResponse(reply=reply)
