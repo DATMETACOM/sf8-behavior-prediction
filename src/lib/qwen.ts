@@ -1,4 +1,5 @@
-﻿import { AlternativeData, Customer, QwenEnhancement, ScoringResult } from '../types'
+import { AlternativeData, Customer, QwenEnhancement, ScoringResult } from '../types'
+import { SCORING_THRESHOLDS, SCORE_BOUNDS } from './scoringConfig'
 
 interface QwenEnhancementRequest {
   customer: Customer
@@ -82,12 +83,12 @@ export async function getQwenEnhancement(
 }
 
 export function applyEnhancement(base: ScoringResult, enhancement: QwenEnhancement): ScoringResult {
-  const adjustedScore = Math.max(0, Math.min(100, base.overallScore + enhancement.adjustment))
+  const adjustedScore = Math.max(SCORE_BOUNDS.min, Math.min(SCORE_BOUNDS.max, base.overallScore + enhancement.adjustment))
   const pa = base.breakdown.pa
 
   let action: ScoringResult['action'] = 'hold'
-  if (adjustedScore >= 75 && pa >= 70) action = 'push now'
-  else if (adjustedScore >= 50 && pa >= 50) action = 'nurture'
+  if (adjustedScore >= SCORING_THRESHOLDS.pushNow.overallScore && pa >= SCORING_THRESHOLDS.pushNow.productAffinity) action = 'push now'
+  else if (adjustedScore >= SCORING_THRESHOLDS.nurture.overallScore && pa >= SCORING_THRESHOLDS.nurture.productAffinity) action = 'nurture'
 
   return {
     ...base,

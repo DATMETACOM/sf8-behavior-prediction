@@ -1,4 +1,5 @@
 import { AlternativeData, Customer, Product, ScoringResult, SimulationResult, ActionType } from '../types'
+import { SCORING_WEIGHTS, SCORING_THRESHOLDS, SCORE_BOUNDS } from './scoringConfig'
 
 export type { ScoringResult, SimulationResult }
 
@@ -16,13 +17,13 @@ interface Breakdown {
   pa: number
 }
 
-function clamp(value: number, min: number, max: number): number {
+function clamp(value: number, min: number = SCORE_BOUNDS.min, max: number = SCORE_BOUNDS.max): number {
   return Math.max(min, Math.min(max, value))
 }
 
 export function getAction(overallScore: number, productAffinity: number): ActionType {
-  if (overallScore >= 75 && productAffinity >= 70) return 'push now'
-  if (overallScore >= 50 && productAffinity >= 50) return 'nurture'
+  if (overallScore >= SCORING_THRESHOLDS.pushNow.overallScore && productAffinity >= SCORING_THRESHOLDS.pushNow.productAffinity) return 'push now'
+  if (overallScore >= SCORING_THRESHOLDS.nurture.overallScore && productAffinity >= SCORING_THRESHOLDS.nurture.productAffinity) return 'nurture'
   return 'hold'
 }
 
@@ -62,10 +63,10 @@ export function scoreCustomer(
 
   // Weighted score defined in SF8 scoring spec.
   const overallScore = Math.round(
-    (breakdown.pcf * 0.20) +
-      (breakdown.bss * 0.30) +
-      (breakdown.erq * 0.15) +
-      (breakdown.pa * 0.35)
+    (breakdown.pcf * SCORING_WEIGHTS.pcf) +
+      (breakdown.bss * SCORING_WEIGHTS.bss) +
+      (breakdown.erq * SCORING_WEIGHTS.erq) +
+      (breakdown.pa * SCORING_WEIGHTS.pa)
   )
 
   const productAffinity = calculateProductAffinity(customer, altData, products)
