@@ -45,19 +45,16 @@ class QwenService:
         return []
 
     def _chat_completion(self, messages: list[dict[str, str]], json_mode: bool = False) -> str:
-        payload: dict[str, Any] = {
+        params: dict[str, Any] = {
             "model": self.model,
-            "input": {"messages": messages},
-            "parameters": {
-                "result_format": "message",
-                "max_tokens": 2000,
-                "temperature": 0.2,
-            },
+            "messages": messages,
+            "temperature": 0.2,
+            "max_tokens": 2000,
         }
         if json_mode:
-            payload["parameters"]["response_format"] = {"type": "json_object"}
+            params["response_format"] = {"type": "json_object"}
 
-        response = self.client.chat.completions.create(**payload)
+        response = self.client.chat.completions.create(**params)
         content = response.choices[0].message.content
         if isinstance(content, list):
             return "".join(str(part) for part in content)
