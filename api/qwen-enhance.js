@@ -1,4 +1,5 @@
 const QWEN_API_URL = process.env.QWEN_API_URL || 'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/text-generation/generation'
+import { checkRateLimit } from './_shared/rateLimiter.js'
 
 function clampAdjustment(value) {
   if (!Number.isFinite(value)) return 0
@@ -46,6 +47,9 @@ function buildPrompt(body) {
 }
 
 export default async function handler(req, res) {
+  const rateLimitResponse = checkRateLimit(req, res, { windowMs: 60000, maxRequests: 20 })
+  if (rateLimitResponse) return rateLimitResponse
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }

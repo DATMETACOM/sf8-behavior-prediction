@@ -1,6 +1,10 @@
 import { loadCustomers } from "./_shared/data.js";
+import { checkRateLimit } from "./_shared/rateLimiter.js";
 
 export default async function handler(req, res) {
+  const rateLimitResponse = checkRateLimit(req, res, { windowMs: 60000, maxRequests: 60 })
+  if (rateLimitResponse) return rateLimitResponse
+
   if (req.method !== "GET") {
     return res.status(405).json({ detail: "Method not allowed" });
   }

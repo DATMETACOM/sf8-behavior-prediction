@@ -1,5 +1,6 @@
 import { findCustomer, loadProductCatalog } from "../_shared/data.js";
 import { analyzeWithQwen, copilotWithQwen } from "../_shared/qwen.js";
+import { checkRateLimit } from "../_shared/rateLimiter.js";
 
 function nowIso() {
   return new Date().toISOString();
@@ -65,6 +66,9 @@ function baseScope(productCatalog) {
 }
 
 export default async function handler(req, res) {
+  const rateLimitResponse = checkRateLimit(req, res, { windowMs: 60000, maxRequests: 20 })
+  if (rateLimitResponse) return rateLimitResponse
+
   const requestStartedAt = Date.now();
   const traceId = buildTraceId("copilot");
 
