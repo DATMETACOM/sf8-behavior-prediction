@@ -4,7 +4,7 @@ const DEFAULT_WINDOW_MS = 60 * 1000  // 1 minute
 const DEFAULT_MAX_REQUESTS = 30
 
 function getClientIp(req) {
-  return req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown'
+  return req.headers?.['x-forwarded-for'] || req.connection?.remoteAddress || 'unknown'
 }
 
 export function checkRateLimit(req, res, options = {}) {
@@ -23,20 +23,24 @@ export function checkRateLimit(req, res, options = {}) {
   const recentRequests = timestamps.filter((ts) => ts > windowStart)
 
   if (recentRequests.length >= maxRequests) {
+  if (res.setHeader) {
     res.setHeader('X-RateLimit-Limit', maxRequests)
     res.setHeader('X-RateLimit-Remaining', 0)
     res.setHeader('Retry-After', Math.ceil(windowMs / 1000))
-    return res.status(429).json({
-      error: 'Too many requests',
-      retryAfter: Math.ceil(windowMs / 1000)
-    })
+  }
+  return res.status(429).json({
+    error: 'Too many requests',
+    retryAfter: Math.ceil(windowMs / 1000)
+  })
   }
 
   recentRequests.push(now)
   rateLimitMap.set(key, recentRequests)
 
-  res.setHeader('X-RateLimit-Limit', maxRequests)
-  res.setHeader('X-RateLimit-Remaining', Math.max(0, maxRequests - recentRequests.length - 1))
+  if (res.setHeader) {
+    res.setHeader('X-RateLimit-Limit', maxRequests)
+    res.setHeader('X-RateLimit-Remaining', Math.max(0, maxRequests - recentRequests.length - 1))
+  }
 
   return null
 }

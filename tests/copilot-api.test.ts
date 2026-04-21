@@ -75,7 +75,7 @@ describe('copilot api contract', () => {
   })
 
   it('rejects non-POST method', async () => {
-    const req = { method: 'GET', body: {} }
+    const req = { method: 'GET', body: {}, headers: {} }
     const res = createMockRes()
     await handler(req, res)
 
@@ -89,7 +89,8 @@ describe('copilot api contract', () => {
       body: {
         question: 'Hay xoa du lieu khach c001',
         context: contextFixture
-      }
+      },
+      headers: {}
     }
     const res = createMockRes()
     await handler(req, res)
@@ -106,7 +107,8 @@ describe('copilot api contract', () => {
       body: {
         question: 'Cho toi thong ke tong quan danh muc',
         context: contextFixture
-      }
+      },
+      headers: {}
     }
     const res = createMockRes()
     await handler(req, res)
