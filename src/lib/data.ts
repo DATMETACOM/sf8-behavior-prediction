@@ -1,4 +1,4 @@
-﻿// SF8 - Demo Data (20 customers)
+// SF8 - Demo Data (20 customers)
 
 import { AlternativeData, Customer, Product } from '../types'
 
@@ -229,33 +229,33 @@ export const ALTERNATIVE_DATA: Record<string, AlternativeData> = Object.fromEntr
 
 export const PRODUCTS: Product[] = [
   {
-    id: 'cc-platinum',
-    type: 'credit_card',
-    productCode: 'SF-CC-PLAT',
-    name: 'Shinhan FlexCard Platinum (PoC)',
-    description: 'The tin dung uu tien cho khach hang thu nhap on dinh',
-    minIncome: 10000000,
-    targetSegment: ['office', 'it', 'professional', 'young'],
+    id: 'personal-loan',
+    type: 'personal_loan',
+    productCode: 'SF-PL-001',
+    name: 'Vay tín chấp cá nhân',
+    description: 'Giai ngan nhanh, khong can the chap tai san, thu tuc 100% online',
+    minIncome: 8000000,
+    targetSegment: ['office', 'salaried', 'stable', 'professional'],
     keyTerms: {
-      limitHint: 'Han muc de xuat: 30M-120M VND',
-      feeHint: 'Mien phi nam dau neu dat dieu kien chi tieu'
+      limitHint: 'Han muc de xuat: len den 300M VND',
+      feeHint: 'Lai suat tham khao: 18%-24%/nam tuy diem tin dung'
     },
     operationalNotes: [
-      'Uu tien lead co thu nhap on dinh va hanh vi chi tieu so cao',
+      'Uu tien lead co thu nhap on dinh va thanh toan hoa don deu',
       'Can doi chieu dieu kien KYC truoc khi goi'
     ]
   },
   {
-    id: 'cc-cashback',
+    id: 'credit-card',
     type: 'credit_card',
-    productCode: 'SF-CC-CASH',
-    name: 'Shinhan Daily Cashback Card (PoC)',
-    description: 'The hoan tien cho hanh vi mua sam thuong xuyen',
-    minIncome: 8000000,
-    targetSegment: ['shopping', 'ecommerce', 'young'],
+    productCode: 'SF-CC-001',
+    name: 'Thẻ tín dụng THE FIRST',
+    description: 'Rut tien mat 100% han muc, tich luy diem thuong, tra gop 0%',
+    minIncome: 7000000,
+    targetSegment: ['shopping', 'ecommerce', 'young', 'office'],
     keyTerms: {
-      limitHint: 'Han muc de xuat: 20M-80M VND',
-      feeHint: 'Hoan tien theo danh muc chi tieu'
+      limitHint: 'Han muc de xuat: toI da 100M VND',
+      feeHint: 'Mien phi nam dau neu dat dieu kien chi tieu'
     },
     operationalNotes: [
       'Phu hop lead co tan suat ecommerce va e-wallet cao',
@@ -263,87 +263,20 @@ export const PRODUCTS: Product[] = [
     ]
   },
   {
-    id: 'pl-salary',
-    type: 'personal_loan',
-    productCode: 'SF-PL-SAL',
-    name: 'Shinhan Salary Plus Loan (PoC)',
-    description: 'Vay tin chap theo thu nhap luong',
-    minIncome: 8000000,
-    targetSegment: ['office', 'salaried', 'stable'],
+    id: 'auto-loan',
+    type: 'auto_loan',
+    productCode: 'SF-AL-001',
+    name: 'Vay mua ô tô',
+    description: 'Tai tro den 80% gia tri xe moi, thoi han vay den 84 thang',
+    minIncome: 20000000,
+    targetSegment: ['business', 'professional', 'mid_age', 'high_income'],
     keyTerms: {
-      limitHint: 'So tien vay de xuat: 20M-300M VND',
-      tenorHint: 'Ky han de xuat: 6-48 thang'
+      limitHint: 'Han muc de xuat: len den 4 ty VND',
+      tenorHint: 'Ky han de xuat: 12-84 thang'
     },
     operationalNotes: [
-      'Uu tien lead co lich su thu nhap deu va tenure telco cao',
-      'Tu van tong nghia vu tra no truoc khi de xuat'
-    ]
-  },
-  {
-    id: 'pl-fast',
-    type: 'personal_loan',
-    productCode: 'SF-PL-FAST',
-    name: 'Shinhan Quick Cash Loan (PoC)',
-    description: 'Goi vay giai ngan nhanh cho nhu cau ngan han',
-    minIncome: 5000000,
-    targetSegment: ['freelancer', 'urgent', 'gig'],
-    keyTerms: {
-      limitHint: 'So tien vay de xuat: 10M-120M VND',
-      tenorHint: 'Ky han de xuat: 6-24 thang'
-    },
-    operationalNotes: [
-      'Chi tu van khi lead co dau hieu phan hoi som tich cuc',
-      'Nhan vien can nhac ro dieu kien phi/phi phat neu tra cham'
-    ]
-  },
-  {
-    id: 'sme-micro',
-    type: 'sme_loan',
-    productCode: 'SF-SME-MICRO',
-    name: 'Shinhan SME Starter Loan (PoC)',
-    description: 'Tai tro von luu dong cho ho kinh doanh',
-    minIncome: 15000000,
-    targetSegment: ['business', 'entrepreneur', 'sme'],
-    keyTerms: {
-      limitHint: 'So tien vay de xuat: 100M-500M VND',
-      tenorHint: 'Ky han de xuat: 12-60 thang'
-    },
-    operationalNotes: [
-      'Uu tien lead co occupation lien quan kinh doanh',
+      'Uu tien lead co thu nhap cao va quan tam xe hoi',
       'Can tham dinh bo sung ho so muc dich su dung von'
-    ]
-  },
-  {
-    id: 'ins-health',
-    type: 'insurance',
-    productCode: 'SF-INS-CARE',
-    name: 'Shinhan Care Insurance (PoC)',
-    description: 'Goi bao hiem suc khoe cho khach hang va gia dinh',
-    minIncome: 10000000,
-    targetSegment: ['family', 'health', 'mid_age'],
-    keyTerms: {
-      feeHint: 'Muc phi phu thuoc do tuoi va quyen loi dang ky'
-    },
-    operationalNotes: [
-      'Phu hop lead quan tam health/family tu social signal',
-      'Tu van theo nhu cau bao ve tai chinh dai han'
-    ]
-  },
-  {
-    id: 'bnpl-shop',
-    type: 'bnpl',
-    productCode: 'SF-BNPL-SHOP',
-    name: 'Shinhan ShopNow PayLater (PoC)',
-    description: 'Mua truoc tra sau cho khach hang mua sam thuong xuyen',
-    minIncome: 7000000,
-    targetSegment: ['shopping', 'ecommerce', 'young'],
-    keyTerms: {
-      limitHint: 'Han muc de xuat: 5M-30M VND',
-      feeHint: 'Co the mien lai neu thanh toan dung han'
-    },
-    operationalNotes: [
-      'Uu tien lead co tan suat mua sam online deu',
-      'Can canh bao ro lich thanh toan de tranh qua han'
     ]
   }
 ]

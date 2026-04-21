@@ -39,18 +39,32 @@ const contextFixture = {
       overallScore: 78,
       action: 'push now',
       confidence: 0.81,
-      recommendedProduct: 'cc-platinum',
+      recommendedProduct: 'personal-loan',
       positiveFactors: ['High e-wallet activity', 'Strong e-commerce purchase behavior'],
       negativeFactors: ['Low commerce activity']
     }
   ],
   productCatalog: [
     {
-      id: 'cc-platinum',
-      productCode: 'SF-CC-PLAT',
-      name: 'Shinhan FlexCard Platinum (PoC)',
-      minIncome: 10000000,
-      description: 'The tin dung uu tien cho khach hang thu nhap on dinh'
+      id: 'personal-loan',
+      productCode: 'SF-PL-001',
+      name: 'Vay tín chấp cá nhân',
+      minIncome: 8000000,
+      description: 'Giai ngan nhanh, khong can the chap tai san, thu tuc 100% online'
+    },
+    {
+      id: 'credit-card',
+      productCode: 'SF-CC-001',
+      name: 'Thẻ tín dụng THE FIRST',
+      minIncome: 7000000,
+      description: 'Rut tien mat 100% han muc, tich luy diem thuong, tra gop 0%'
+    },
+    {
+      id: 'auto-loan',
+      productCode: 'SF-AL-001',
+      name: 'Vay mua ô tô',
+      minIncome: 20000000,
+      description: 'Tai tro den 80% gia tri xe moi, thoi han vay den 84 thang'
     }
   ]
 }

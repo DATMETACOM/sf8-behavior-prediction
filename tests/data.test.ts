@@ -23,10 +23,11 @@ describe('SF8 data integrity', () => {
   })
 
   it('contains expected product catalog', () => {
-    expect(PRODUCTS.length).toBe(7)
+    expect(PRODUCTS.length).toBe(3)
     const ids = PRODUCTS.map((item) => item.id)
-    expect(ids).toContain('cc-platinum')
-    expect(ids).toContain('pl-fast')
+    expect(ids).toContain('personal-loan')
+    expect(ids).toContain('credit-card')
+    expect(ids).toContain('auto-loan')
   })
 
   it('returns at least one eligible product per customer', () => {

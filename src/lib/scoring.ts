@@ -1,4 +1,4 @@
-﻿import { AlternativeData, Customer, Product, ScoringResult, SimulationResult, ActionType } from '../types'
+import { AlternativeData, Customer, Product, ScoringResult, SimulationResult, ActionType } from '../types'
 
 export type { ScoringResult, SimulationResult }
 
@@ -187,7 +187,7 @@ function calculateProductAffinity(
 
 function getTopProduct(productAffinity: Record<string, number>): string {
   const top = Object.entries(productAffinity).sort((a, b) => b[1] - a[1])[0]
-  return top?.[0] ?? 'cc-cashback'
+  return top?.[0] ?? 'credit-card'
 }
 
 function generateFactors(customer: Customer, altData: AlternativeData): ScoringResult['factors'] {
